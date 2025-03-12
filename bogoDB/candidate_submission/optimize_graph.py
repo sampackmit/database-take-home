@@ -111,8 +111,9 @@ def optimize_graph(
     #add small component to other nodes
 
     non_norm_arr = np.outer(target_hist, target_hist)
-    random_order = np.random.permutation(nodes[:-1])
+    random_order = np.random.permutation(range(len(nodes[:-1])))
 
+    # non_norm_arr = np.zeros((target_hist.size, target_hist.size))
     for i, node in enumerate(nodes[:-1]):
 
         non_norm_arr[i,i] = 0 # no loop condition 
@@ -121,11 +122,11 @@ def optimize_graph(
 
         non_norm_arr[i][sorted_column_inds[:-3]] = 0
 
-        # if non_norm_arr[i][sorted_column_inds[-3]] < 0.95 * non_norm_arr[i][sorted_column_inds[-2]]:
+        if non_norm_arr[i][sorted_column_inds[-3]] < 0.95 * non_norm_arr[i][sorted_column_inds[-2]]:
 
-        # non_norm_arr[i][sorted_column_inds[-3]] = 0
-        non_norm_arr[i] = 0
-        non_norm_arr[i, random_order[i]] = 1 # (non_norm_arr[i][sorted_column_inds[-2:]]).mean() * 100
+            non_norm_arr[i][sorted_column_inds[-3]] = 0
+
+            non_norm_arr[i, random_order[i]] =  (non_norm_arr[i][sorted_column_inds[-2:]]).mean() * 10
 
         # at most 3 outgoing edges per node, 1 allocated to be cyclical 
 
