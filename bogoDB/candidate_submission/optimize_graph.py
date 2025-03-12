@@ -102,12 +102,12 @@ def optimize_graph(
 
     targets = [query['target'] for query in results['detailed_results']]
 
-    target_hist, nodes = np.histogram(targets, bins = np.arange(0, NUM_NODES+2, 1))
+    target_hist, nodes = np.histogram(targets, bins = np.arange(0, max(targets)+2, 1))
     # print('nodes', nodes)
     # print('target hist len', len(target_hist))
     target_hist = target_hist/target_hist.sum()
     #normalize 
-    target_hist = target_hist + 0.01 * np.ones(target_hist.size)/target_hist.shape
+    target_hist = target_hist #+ 0.01 * np.ones(target_hist.size)/target_hist.shape
     #add small component to other nodes
 
     non_norm_arr = np.outer(target_hist, target_hist)
@@ -121,11 +121,13 @@ def optimize_graph(
 
         non_norm_arr[i][sorted_column_inds[:-3]] = 0
 
-        # if non_norm_arr[i][sorted_column_inds[-3]] < 0.89 * non_norm_arr[i][sorted_column_inds[-2]]:
+        # if non_norm_arr[i][sorted_column_inds[-3]] < 0.95 * non_norm_arr[i][sorted_column_inds[-2]]:
 
-        #     non_norm_arr[i][sorted_column_inds[-3]] = 0
-        #     non_norm_arr[i, random_order[i]] = (non_norm_arr[i][sorted_column_inds[-2:]]).mean()
-        #at most 3 outgoing edges per node, 1 allocated to be cyclical 
+        # non_norm_arr[i][sorted_column_inds[-3]] = 0
+        non_norm_arr[i] = 0
+        non_norm_arr[i, random_order[i]] = 1 # (non_norm_arr[i][sorted_column_inds[-2:]]).mean() * 100
+
+        # at most 3 outgoing edges per node, 1 allocated to be cyclical 
 
 
     #now rank all edges  
