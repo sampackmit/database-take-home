@@ -5,6 +5,8 @@
 
 [Describe how you analyzed the query patterns and what insights you found]
 
+I saw that there was an exponential decay in the 
+
 ### Optimization Strategy
 
 [Explain your optimization strategy in detail]

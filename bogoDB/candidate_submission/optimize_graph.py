@@ -102,9 +102,14 @@ def optimize_graph(
 
     targets = [query['target'] for query in results['detailed_results']]
 
-    target_hist, nodes = np.histogram(targets, bins = np.arange(min(targets), max(targets)+2, 1))
+    target_hist, nodes = np.histogram(targets, bins = np.arange(0, NUM_NODES+2, 1))
     # print('nodes', nodes)
     # print('target hist len', len(target_hist))
+    target_hist = target_hist/target_hist.sum()
+    #normalize 
+    target_hist = target_hist + 0.01 * np.ones(target_hist.size)/target_hist.shape
+    #add small component to other nodes
+
     non_norm_arr = np.outer(target_hist, target_hist)
     random_order = np.random.permutation(nodes[:-1])
 
@@ -112,10 +117,14 @@ def optimize_graph(
 
         non_norm_arr[i,i] = 0 # no loop condition 
         sorted_column_inds = np.argsort(non_norm_arr[i])
-        non_norm_arr[i][sorted_column_inds[:-2]] = 0
-        if i == 0:
-            print((non_norm_arr[i][sorted_column_inds[-2:]]).mean())
-        non_norm_arr[i, random_order[i]] = (non_norm_arr[i][sorted_column_inds[-2:]]).mean()
+
+
+        non_norm_arr[i][sorted_column_inds[:-3]] = 0
+
+        # if non_norm_arr[i][sorted_column_inds[-3]] < 0.89 * non_norm_arr[i][sorted_column_inds[-2]]:
+
+        #     non_norm_arr[i][sorted_column_inds[-3]] = 0
+        #     non_norm_arr[i, random_order[i]] = (non_norm_arr[i][sorted_column_inds[-2:]]).mean()
         #at most 3 outgoing edges per node, 1 allocated to be cyclical 
 
 
@@ -123,10 +132,12 @@ def optimize_graph(
 
     all_sorted_weights = np.argsort(non_norm_arr, axis = None)
     # print(all_sorted_weights[:4])
+    print('prelimary number edges', np.sum(non_norm_arr != 0))
+    print('array size', non_norm_arr.shape)
 
-    if MAX_TOTAL_EDGES/2 < len(all_sorted_weights):
+    if MAX_TOTAL_EDGES < len(all_sorted_weights):
 
-        for i in range(len(all_sorted_weights) - MAX_TOTAL_EDGES//2):
+        for i in range(len(all_sorted_weights) - MAX_TOTAL_EDGES):
             ind = np.unravel_index(all_sorted_weights[i], shape = non_norm_arr.shape)
             non_norm_arr[ind] = 0 
 
@@ -135,8 +146,10 @@ def optimize_graph(
 
     
     indegrees = np.zeros(nodes.size)
-    print(non_norm_arr[0])
-    for i, node in enumerate(nodes[:-1]):
+    # print(non_norm_arr[0])
+    for i, node in enumerate(nodes[:-2]):
+        # print('i', i)
+        # print('node', node)
         weights_norm = non_norm_arr[i]/max(1, non_norm_arr[i].max())
         
         # optimized_graph[str(node)][str(nodes[i-1])] = float(1/3)
@@ -152,7 +165,7 @@ def optimize_graph(
                # nodes[i] = int(w)
 
 
-    print(np.sum(indegrees != 0))
+    # print(np.sum(indegrees != 0))
     # print(np.sum(outdegress != 0))
 
     # plt.bar(nodes, indegrees)
