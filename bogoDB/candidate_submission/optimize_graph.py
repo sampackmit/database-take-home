@@ -95,9 +95,60 @@ def optimize_graph(
 
     # Create a copy of the initial graph to modify
     optimized_graph = {}
+    print(1)
     for node, edges in initial_graph.items():
-        optimized_graph[node] = dict(edges)
+        optimized_graph[node] = {}
 
+    targets = [query['target'] for query in results['detailed_results']]
+
+    target_hist, nodes = np.histogram(targets, bins = np.arange(min(targets), max(targets)+2, 1))
+    # print('nodes', nodes)
+    # print('target hist len', len(target_hist))
+    non_norm_arr = np.outer(target_hist, target_hist)
+
+    for i, node in enumerate(nodes[:-1]):
+
+        non_norm_arr[i,i] = 0 # no loop condition 
+        sorted_column_inds = np.argsort(non_norm_arr[i])
+        non_norm_arr[i][sorted_column_inds[:-3]] = 0
+        # if i == 0:
+        #     pass
+        #     print(sorted_column_inds)
+            # print(non_norm_arr[i][sorted_column_inds[-1]])
+            # print(non_norm_arr[i][sorted_column_inds[-2]])
+            # print(non_norm_arr[i][sorted_column_inds[-3]])
+    print(non_norm_arr)
+        #at most 3 outgoing edges per node
+
+    #now rank all edges  
+
+    all_sorted_weights = np.argsort(non_norm_arr, axis = None)
+    # print(all_sorted_weights[:4])
+
+    if MAX_TOTAL_EDGES < len(all_sorted_weights):
+
+        for i in range(len(all_sorted_weights) - MAX_TOTAL_EDGES):
+            ind = np.unravel_index(all_sorted_weights[i], shape = non_norm_arr.shape)
+            non_norm_arr[ind] = 0 
+
+    print(non_norm_arr[0])
+    # print(non_norm_arr[np.unravel_index(all_sorted_weights[-1], shape = non_norm_arr.shape)])
+
+    non_norm_arr = non_norm_arr/non_norm_arr.max()
+
+    for i, node in enumerate(nodes[:-1]):
+        weights = non_norm_arr[i] 
+
+        for i, w in enumerate(weights):
+            if w != 0:
+                print(nodes[i])
+
+                optimized_graph[str(node)][str(nodes[i])] = float(w)
+                print(optimized_graph[str(node)])
+                
+                # nodes[i] = int(w)
+    
+    # print(non_norm_arr[30])
     # =============================================================
     # TODO: Implement your optimization strategy here
     # =============================================================
